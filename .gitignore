@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+catboost_info/
+data/raw/*
+data/processed/*
+reports/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!reports/.gitkeep
+
+# Regenerate via scripts/find_repeat_opponents.py -- 148M, exceeds GitHub's
+# 100MB hard limit. Every other file in data/reference/ is small enough to
+# ship as-is (the actual final output tables the project's findings rest on).
+data/reference/repeat_opponent_pairs.csv
