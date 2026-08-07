@@ -1,0 +1,52 @@
+PokerStars Hand #100000000001: Hold'em No Limit (RUB 1/2) - 2026/07/28 12:00:00 MSK
+Table 'Micro 6max' 6-max Seat #1 is the button
+Seat 1: Hero (RUB 200 in chips)
+Seat 2: Villain1 (RUB 185 in chips)
+Seat 3: Villain2 (RUB 220 in chips)
+Seat 4: Villain3 (RUB 150 in chips)
+Seat 5: Villain4 (RUB 200 in chips)
+Seat 6: Villain5 (RUB 190 in chips)
+Villain2: posts small blind RUB 1
+Villain3: posts big blind RUB 2
+*** HOLE CARDS ***
+Dealt to Hero [Ah Kd]
+Villain4: folds
+Villain5: folds
+Hero: raises RUB 4 to RUB 6
+Villain2: folds
+Villain3: calls RUB 4
+*** FLOP *** [2h 7c Jd]
+Villain3: checks
+Hero: bets RUB 4
+Villain3: folds
+*** SUMMARY ***
+Total pot RUB 14 | Rake RUB 1
+Board [2h 7c Jd]
+Seat 1: Hero (button) collected RUB 13 from pot
+
+PokerStars Hand #100000000002: Hold'em No Limit (RUB 1/2) - 2026/07/28 12:03:00 MSK
+Table 'Micro 6max' 6-max Seat #2 is the button
+Seat 1: Hero (RUB 213 in chips)
+Seat 2: Villain1 (RUB 185 in chips)
+Seat 3: Villain2 (RUB 210 in chips)
+Seat 4: Villain3 (RUB 145 in chips)
+Villain3: posts small blind RUB 1
+Hero: posts big blind RUB 2
+*** HOLE CARDS ***
+Dealt to Hero [7s 7d]
+Villain1: raises RUB 6 to RUB 6
+Villain2: folds
+Villain3: folds
+Hero: calls RUB 4
+*** FLOP *** [7h 8c 2d]
+Hero: checks
+Villain1: bets RUB 8
+Hero: raises RUB 24 to RUB 24
+Villain1: calls RUB 16
+*** TURN *** [7h 8c 2d] [4s]
+Hero: bets RUB 40
+Villain1: folds
+*** SUMMARY ***
+Total pot RUB 92 | Rake RUB 3
+Board [7h 8c 2d 4s]
+Seat 1: Hero collected RUB 89 from pot
