@@ -29,7 +29,8 @@ import pandas as pd
 from src.pipeline.archetypes import UNKNOWN_LABEL, label_archetypes
 from src.pipeline.preprocess import player_stats
 
-N_PROFILES = 20
+N_PROFILES = 35  # 20 originally gave only 1 Nit (7.4% of 20 rounds down) -- 35 is the
+# smallest N where proportional (largest-remainder) allocation yields >=3 Nits
 MIN_HANDS = 500
 MIN_SESSIONS = 5
 SESSION_GAP_MINUTES = 45
