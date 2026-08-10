@@ -195,3 +195,83 @@ def combos_vs_range_equity_on_board(
     combos_b = _expand_range(range_b) if range_b and isinstance(range_b[0], str) else list(range_b)
     combos_b = filter_combos_for_board(combos_b, board)
     return _combos_vs_combos_equity(combos_a, combos_b, board=board, trials=trials)
+
+
+def combos_vs_multiple_ranges_equity_on_board(
+    combos_a: list[tuple[str, str]],
+    ranges_b: list[list],
+    board: list[str] | None = None,
+    trials: int = 2000,
+) -> float:
+    """True multiway Monte Carlo: hero's combo(s) vs N INDEPENDENTLY-ranged
+    opponents (one range per opponent in `ranges_b`), not a single pooled/
+    unioned range. Pooling is a different, wrong question: equity vs one
+    random opponent drawn from the union of everyone's range is NOT the same
+    as the probability of beating ALL N opponents simultaneously, which is
+    strictly harder and generally lower as more opponents are live (this is
+    exactly why the practice app's live EV panel used to pool -- see
+    backend/ev/live_ev.py's changelog for the fix that replaced it with this
+    function).
+
+    Each trial samples ONE combo per opponent range independently (not
+    unioned), rejects the trial on any card conflict among hero/villains/
+    board, deals the remaining board cards, and scores hero's equity SHARE:
+    1.0 if hero's hand is strictly best, an even split with however many
+    opponents tie for best (including hero) if hero ties for the best hand,
+    0.0 if any opponent's hand is strictly better. Board may be 0/3/4/5
+    known cards. Each entry in `ranges_b` may be hand notations (e.g. "AKs")
+    or already-concrete combos, same convention as `combos_vs_range_equity_on_board`.
+    """
+    if not combos_a or not ranges_b or any(not r for r in ranges_b):
+        return 0.5
+    expanded_ranges = [_expand_range(r) if r and isinstance(r[0], str) else list(r) for r in ranges_b]
+
+    board = board or []
+    n_board_needed = 5 - len(board)
+    full_deck = [r + s for r in RANKS for s in SUITS]
+
+    total_equity = 0.0
+    trial = 0
+    attempts = 0
+    max_attempts = trials * 30
+
+    while trial < trials and attempts < max_attempts:
+        attempts += 1
+        hero_hand = random.choice(combos_a)
+        used = set(hero_hand) | set(board)
+        if len(used) < 2 + len(board):
+            continue  # hero's combo conflicts with a board card, resample
+
+        villain_hands = []
+        conflict = False
+        for r in expanded_ranges:
+            vh = random.choice(r)
+            if used & set(vh):
+                conflict = True
+                break
+            villain_hands.append(vh)
+            used |= set(vh)
+        if conflict:
+            continue
+
+        if n_board_needed > 0:
+            remaining = [c for c in full_deck if c not in used]
+            full_board = board + random.sample(remaining, n_board_needed)
+        else:
+            full_board = board
+
+        board_cards = [Card(c) for c in full_board]
+        hero_score = evaluate_7cards([Card(hero_hand[0]), Card(hero_hand[1])] + board_cards)
+        villain_scores = [evaluate_7cards([Card(vh[0]), Card(vh[1])] + board_cards) for vh in villain_hands]
+        best_villain = max(villain_scores)
+
+        if hero_score > best_villain:
+            total_equity += 1.0
+        elif hero_score == best_villain:
+            n_tied = 1 + sum(1 for s in villain_scores if s == best_villain)
+            total_equity += 1.0 / n_tied
+        trial += 1
+
+    if trial == 0:
+        return 0.5
+    return total_equity / trial
