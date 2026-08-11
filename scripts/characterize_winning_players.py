@@ -7,6 +7,29 @@ ranked) and correlates each against real bb_per_100 -- so the answer is
 "what predicts winning across the whole reliable population," not a
 just-so story built from eyeballing a handful of names.
 
+RESULT (2026-08-11, 686 players with >=5000 hands, clean-hand basis):
+  vpip           rho=+0.2474  p~0
+  pfr            rho=+0.4749  p~0   <- strongest single predictor
+  postflop_af    rho=+0.0850  p=0.026 (real but small)
+  threebet_pct   rho=+0.4678  p~0   <- nearly as strong as PFR
+  avg_open_bb    rho=+0.0006  p=0.988 (no signal at all)
+Top decile (by bb_per_100, mean +26.94) vs bottom decile (mean -10.45):
+PFR 15.5% vs 8.2% (nearly double), 3bet% 5.4% vs 2.4% (more than double),
+VPIP 20.8% vs 17.5%, postflop AF 2.96 vs 2.49. Open sizing shows no real
+difference (both deciles' means came out as inf in this run -- a display
+artifact from the aggregation on a small subset, not investigated
+further since the underlying correlation is already unambiguously zero).
+
+Correlational, not causal (could be "better players happen to also 3-bet
+more" rather than "3-betting more makes you better") -- but the
+direction and magnitude line up with published exploitative micro-stakes
+strategy (this population barely 3-bets at all -- 2-5% of raise
+responses per Tier 2's own finding -- and real winners 3-bet noticeably
+more than that population baseline). Directly motivated backend/bots/
+abc_bot.py's v24 BLUFF_3BET_VS_TIGHT flag in the sibling Practice_App
+repo (bluff-3-bet a speculative hand against a known high-fold-to-raise
+opponent) -- see that commit for the A/B test result.
+
 Usage: python3 scripts/characterize_winning_players.py [min_hands]
 """
 
