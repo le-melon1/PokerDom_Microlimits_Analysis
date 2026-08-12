@@ -27,8 +27,8 @@ class Deck:
     def __init__(self):
         self.cards = [Card(r + s) for r in RANKS for s in SUITS]
 
-    def shuffle(self):
-        random.shuffle(self.cards)
+    def shuffle(self, rng=None):
+        (rng or random).shuffle(self.cards)
 
     def draw(self, n=1):
         drawn = self.cards[:n]
