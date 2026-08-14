@@ -136,6 +136,27 @@ Session boundaries are detected from real timestamps
 adaptation is measured by pooling early-half vs. late-half events across
 many real sessions (not one huge session) for statistical power.
 
+## Bot strategy validation ledger
+
+Each candidate bot rule is checked against the real-player data before it is
+treated as a strategy change; a statistically significant descriptive pattern
+is still not a causal bot A/B result.
+
+- **Raise and 3-bet more selectively** — supported: among 614 reliable
+  players, PFR and 3-bet% are the two strongest win-rate correlates
+  (`rho` about `+0.48` each). This supports the existing selective
+  bluff-3-bet work against opponents known to over-fold, rather than a
+  blanket "3-bet everything" rule.
+- **Replace passive calls with raises** — not supported as an independent
+  rule: `scripts/check_raise_over_call_strategy.py` finds a modest raw
+  passive-gap association (`rho=-0.154`, `p=0.00012`), but it disappears
+  after controlling PFR, 3-bet%, postflop AF, and sizing (`p=0.196`). A
+  raise may be a tie-breaker when both actions are already viable, but it
+  must not override range or opponent-specific rules.
+- **Range-read from barrel count** — rejected: three-barrel showdown hands
+  were slightly *weaker*, not stronger, in this sample. Do not add a
+  "more barrels means a stronger range" rule.
+
 ## Known approximations (documented, not bugs)
 
 - Board-per-street is inferred from board length (3/4/5 cards), not full
