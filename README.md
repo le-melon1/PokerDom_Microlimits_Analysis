@@ -9,7 +9,7 @@ within-session opponent adaptation).
 ## Companion repo
 
 The findings and parsed data here feed a second, sibling repo:
-[`PokerDom_Practice_App`](https://github.com/olegvarikov/PokerDom_Practice_App)
+[`PokerDom_Practice_App`](https://github.com/le-melon1/PokerDom_Practice_App)
 — a local web app to play against ML bots trained on this project's parsed
 hands, plus a hand-coded strategy bot whose rules were derived and A/B-tested
 from the tables in `data/reference/` below. That app imports this project's
