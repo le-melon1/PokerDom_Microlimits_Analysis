@@ -34,11 +34,27 @@ This repo's outputs are consumed directly by the sibling
   measured within-session adaptation findings (players genuinely adapt to
   Nit-styled and frequent-bluffer opponents specifically, not to generic
   archetype labels).
+- `check_tilt_after_cooler.py` (2026-08-18) — **confirmed real**: players
+  play looser/more aggressively for ~10 hands after losing a big pot
+  (VPIP +11.75pp, postflop aggression +5.76pp, bigger bets, more thin
+  calls, all p~0 on 768k post-cooler hands vs 18.4M baseline). Survives a
+  stack-matched re-check and shows a decay curve matching real
+  psychological tilt, not a stack-depth artifact — full numbers in the
+  script's own docstring. Same "not wired into the bot" status as the
+  items above, for the same reason (see next paragraph).
 
-Both of these are flagged in the sibling repo's CLAUDE.md as the
+All three of these are flagged in the sibling repo's CLAUDE.md as the
 highest-leverage next features to wire into `abc_bot.py` — currently the bot
-only ever uses static archetype labels, never per-player bluff frequency or
-adaptation signal, even though both are already computed here.
+only ever uses static archetype labels, never per-player bluff frequency,
+generic within-session adaptation, or recent-big-pot-loss signal, even
+though all three are already computed/confirmed here. The blocker for all
+three is the same: `choose_abc_action` only ever sees the CURRENT hand plus
+static per-seat archetype labels, no session history at all -- wiring any
+of them in needs (a) session-scoped per-seat state passed into the bot
+(Practice_App's `backend/dossier.py::TableDossier` already tracks
+per-seat session stats live, a natural place to extend) and (b) a way for
+`probe_chance_enumeration.py` to A/B test a rule that depends on a
+sequence of hands, not one fresh hand at a time -- it currently can't.
 
 ## GitHub
 
