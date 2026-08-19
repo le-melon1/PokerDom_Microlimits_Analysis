@@ -20,10 +20,27 @@ Poker?"), not fit to this dataset's own percentiles, though they happen
 to land close to this population's natural quantiles too (0.40 quantile
 ~=1.88, 0.75 quantile =3.00) and produce a sane non-degenerate split here
 (44% rare / 32% normal / 24% often among reliable-sample players).
-Purely ADDITIVE for now -- `archetype` itself is unchanged, existing
-callers (reference-table builders, the ML behavior-clone model's
-`archetype` feature, abc_bot.py's archetype-gated rules) are untouched
-until each is deliberately revisited to use the new axis.
+Follow-up correction, same conversation: the archetype axis itself was
+NOT purely preflop -- `_label_row`'s Maniac branch used postflop `af`,
+mixing the two axes right where they're meant to be independent. Fixed:
+Maniac is now `vpip > 0.45 and pfr_ratio >= 0.45` (an extreme-VPIP LAG,
+same preflop-only signals as every other archetype), no `af` parameter
+at all. This is a real, deliberate re-labeling, not a bugfix in the
+"restores old intended behavior" sense -- some players who were Maniac
+under the old af-gated rule (loose but with low PFR-ratio) now land in
+Station or Loose-passive instead, and some who weren't (loose, high
+PFR-ratio, but af<2.0 postflop) now DO count as Maniac. What used to be
+"loose AND postflop-aggressive" is now correctly represented as the
+compound label, e.g. `LAG (often)` or `Loose-passive (often)`, rather
+than baked into the preflop bucket itself.
+
+Purely ADDITIVE otherwise -- existing callers (reference-table builders,
+the ML behavior-clone model's `archetype` feature, abc_bot.py's
+archetype-gated rules) still read the same `archetype` column name and
+same 6 label strings, just re-computed with a cleaner, preflop-only
+definition. Anything gated on `archetype == "Maniac"` downstream will see
+a real population shift and should be revisited before trusting old
+confirmed numbers against it.
 """
 
 import pandas as pd
@@ -36,12 +53,15 @@ POSTFLOP_FREQ_RARE_MAX = 2.0  # AF below this -> "rare"
 POSTFLOP_FREQ_OFTEN_MIN = 3.0  # AF above this -> "often"; between the two -> "normal"
 
 
-def _label_row(vpip: float, pfr: float, af: float) -> str:
+def _label_row(vpip: float, pfr: float) -> str:
+    """Preflop-only -- no postflop stat (af) enters this function. See
+    POSTFLOP_FREQ_TIER / `_postflop_freq_tier` below for the independent
+    postflop axis."""
     pfr_ratio = pfr / vpip if vpip > 0 else 0.0
 
     if vpip < 0.15:
         return "Nit"
-    if vpip > 0.45 and af >= 2.0:
+    if vpip > 0.45 and pfr_ratio >= 0.45:
         return "Maniac"
     if vpip > 0.35 and pfr_ratio < 0.35:
         return "Station"
@@ -68,7 +88,7 @@ def label_archetypes(stats: pd.DataFrame) -> pd.DataFrame:
     out = stats.copy()
     out["reliable"] = out["hands_seen"] >= MIN_HANDS_FOR_LABEL
     out["archetype"] = out.apply(
-        lambda r: _label_row(r["vpip"], r["pfr"], r["aggression_factor"]), axis=1
+        lambda r: _label_row(r["vpip"], r["pfr"]), axis=1
     )
     out["postflop_freq_tier"] = out["aggression_factor"].apply(_postflop_freq_tier)
     out.loc[~out["reliable"], "archetype"] = UNKNOWN_LABEL
