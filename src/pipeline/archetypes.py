@@ -4,6 +4,26 @@ Project brief point 4: labels like "Maniac" or "Station" are only trustworthy
 once the sample clears MIN_HANDS_FOR_LABEL -- below that, VPIP/PFR/AF swing
 too much on small samples to mean anything, so callers should treat
 `reliable=False` rows as "insufficient data", not as a real read.
+
+2026-08-18: added a SECOND, independent axis -- POSTFLOP_FREQ_TIER, a
+3-way split of the same postflop aggression_factor already partially
+folded into `_label_row`'s Maniac cutoff, but now exposed as its own
+column instead of collapsed into one flat archetype label. User's
+request: "мы делим игроков не просто по архетипам, а по архетипам на
+префлопе, а потом ещё каждого из них мы делим на три типа частоты рейза
+на постфлопе (как сделано на покердоме) -- редко/нормально/часто", so
+every player ends up with a COMPOUND (archetype, postflop_freq_tier) read
+instead of one flat label. Thresholds are literature-grounded (standard
+poker-HUD AF convention: AF<2.0 passive, ~2.0-3.0 "solid regular"
+range, AF>3.0 aggressive -- see e.g. BlackRain79's "What is a Good AF in
+Poker?"), not fit to this dataset's own percentiles, though they happen
+to land close to this population's natural quantiles too (0.40 quantile
+~=1.88, 0.75 quantile =3.00) and produce a sane non-degenerate split here
+(44% rare / 32% normal / 24% often among reliable-sample players).
+Purely ADDITIVE for now -- `archetype` itself is unchanged, existing
+callers (reference-table builders, the ML behavior-clone model's
+`archetype` feature, abc_bot.py's archetype-gated rules) are untouched
+until each is deliberately revisited to use the new axis.
 """
 
 import pandas as pd
@@ -11,6 +31,9 @@ import pandas as pd
 from src.config import MIN_HANDS_FOR_LABEL
 
 UNKNOWN_LABEL = "Insufficient sample"
+
+POSTFLOP_FREQ_RARE_MAX = 2.0  # AF below this -> "rare"
+POSTFLOP_FREQ_OFTEN_MIN = 3.0  # AF above this -> "often"; between the two -> "normal"
 
 
 def _label_row(vpip: float, pfr: float, af: float) -> str:
@@ -29,14 +52,27 @@ def _label_row(vpip: float, pfr: float, af: float) -> str:
     return "Loose-passive"
 
 
+def _postflop_freq_tier(af: float) -> str:
+    if af < POSTFLOP_FREQ_RARE_MAX:
+        return "rare"
+    if af > POSTFLOP_FREQ_OFTEN_MIN:
+        return "often"
+    return "normal"
+
+
 def label_archetypes(stats: pd.DataFrame) -> pd.DataFrame:
     """stats: output of pipeline.preprocess.player_stats (needs hands_seen, vpip, pfr,
-    aggression_factor columns). Returns stats with `archetype` and `reliable` columns.
+    aggression_factor columns). Returns stats with `archetype`, `postflop_freq_tier`,
+    `archetype_freq` (the compound "Archetype (tier)" label), and `reliable` columns.
     """
     out = stats.copy()
     out["reliable"] = out["hands_seen"] >= MIN_HANDS_FOR_LABEL
     out["archetype"] = out.apply(
         lambda r: _label_row(r["vpip"], r["pfr"], r["aggression_factor"]), axis=1
     )
+    out["postflop_freq_tier"] = out["aggression_factor"].apply(_postflop_freq_tier)
     out.loc[~out["reliable"], "archetype"] = UNKNOWN_LABEL
+    out.loc[~out["reliable"], "postflop_freq_tier"] = UNKNOWN_LABEL
+    out["archetype_freq"] = out["archetype"] + " (" + out["postflop_freq_tier"] + ")"
+    out.loc[~out["reliable"], "archetype_freq"] = UNKNOWN_LABEL
     return out
